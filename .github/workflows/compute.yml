@@ -1,0 +1,56 @@
+name: Compute & Deploy
+
+on:
+  push:
+    paths:
+      - 'input/origins.csv'
+  workflow_dispatch:
+
+jobs:
+  compute-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install geopandas pyarrow scipy
+
+      - name: Run reachability analysis
+        run: python3 src/reachability_search.py --orig-csv input/origins.csv
+
+      - name: Install tippecanoe
+        run: sudo apt-get install -y tippecanoe
+
+      - name: Convert parquet to GeoJSON
+        run: python3 src/to_geojson.py
+
+      - name: Convert GeoJSON to PMTiles
+        run: |
+          mkdir -p docs
+          tippecanoe \
+            -z14 -Z6 \
+            -l reachability \
+            --no-feature-limit \
+            --no-tile-size-limit \
+            --force \
+            -o docs/reachability.pmtiles \
+            output/geojson/arrival_map_*.geojson
+
+      - name: Copy viewer and origins
+        run: |
+          cp viewer/index.html docs/index.html
+          cp output/geojson/origins.geojson docs/origins.geojson
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
