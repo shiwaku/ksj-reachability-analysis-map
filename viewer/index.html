@@ -163,6 +163,24 @@ document.getElementById("origin-select").addEventListener("change", e => {
   selectedOrigin = e.target.value;
   updateFilter();
 });
+
+const popup = new maplibregl.Popup({ closeButton: false, offset: 8 });
+
+map.on("click", "reachability-fill", e => {
+  const props = e.features[0].properties;
+  const min = parseFloat(props.dist_min);
+  const text = isNaN(min) ? "到達不能" : `${Math.floor(min)}分 ${Math.round((min % 1) * 60)}秒`;
+  popup
+    .setLngLat(e.lngLat)
+    .setHTML(`<div style="font-size:13px;line-height:1.6">
+      <b>到達時間</b>: ${text}<br>
+      <span style="color:#666;font-size:11px">${props.mesh_code}</span>
+    </div>`)
+    .addTo(map);
+});
+
+map.on("mouseenter", "reachability-fill", () => { map.getCanvas().style.cursor = "pointer"; });
+map.on("mouseleave", "reachability-fill", () => { map.getCanvas().style.cursor = ""; });
 </script>
 </body>
 </html>
