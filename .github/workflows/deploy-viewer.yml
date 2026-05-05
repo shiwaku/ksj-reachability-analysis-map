@@ -1,0 +1,22 @@
+name: Deploy Viewer
+
+on:
+  push:
+    paths:
+      - 'viewer/**'
+
+jobs:
+  deploy-viewer:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy viewer files to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./viewer
+          keep_files: true
