@@ -82,7 +82,8 @@ const map = new maplibregl.Map({
   container: "map",
   style: "./pale.json",
   center: [139.64, 35.86],
-  zoom: 10
+  zoom: 10,
+  hash: true
 });
 
 map.addControl(new maplibregl.NavigationControl());
