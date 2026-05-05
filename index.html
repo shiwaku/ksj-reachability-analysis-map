@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>到達圏分析マップ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/pmtiles@3/dist/pmtiles.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; }
+    #map { height: 100vh; }
+    #controls {
+      position: absolute;
+      top: 10px; left: 10px;
+      background: white;
+      padding: 12px 14px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      z-index: 1;
+      min-width: 200px;
+    }
+    #controls h3 { font-size: 13px; margin-bottom: 6px; color: #333; }
+    #origin-select { width: 100%; font-size: 13px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; }
+    #legend {
+      position: absolute;
+      bottom: 30px; left: 10px;
+      background: white;
+      padding: 10px 14px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      font-size: 12px;
+    }
+    #legend h4 { margin-bottom: 5px; font-size: 12px; color: #333; }
+    .legend-row { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
+    .legend-swatch { width: 18px; height: 13px; border-radius: 2px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="controls">
+  <h3>始点を選択</h3>
+  <select id="origin-select"><option>読み込み中...</option></select>
+</div>
+<div id="legend">
+  <h4>到達時間</h4>
+</div>
+
+<script>
+const RANKS = [
+  { rank: "0", label: "0〜10分",  color: "#ff0000" },
+  { rank: "1", label: "10〜20分", color: "#ff4000" },
+  { rank: "2", label: "20〜30分", color: "#ff8000" },
+  { rank: "3", label: "30〜40分", color: "#ffc000" },
+  { rank: "4", label: "40〜50分", color: "#ffff00" },
+  { rank: "5", label: "50〜60分", color: "#c0ff00" },
+  { rank: "6", label: "60〜70分", color: "#00cc00" },
+  { rank: "7", label: "70〜80分", color: "#00cc80" },
+  { rank: "8", label: "80〜90分", color: "#00cccc" },
+  { rank: "9", label: "90分超",   color: "#440055" },
+];
+
+const rankColorExpr = [
+  "match", ["get", "dist_rank"],
+  ...RANKS.flatMap(r => [r.rank, r.color]),
+  "#aaaaaa"
+];
+
+const legend = document.getElementById("legend");
+RANKS.forEach(r => {
+  const row = document.createElement("div");
+  row.className = "legend-row";
+  row.innerHTML = `<div class="legend-swatch" style="background:${r.color};opacity:0.75"></div><span>${r.label}</span>`;
+  legend.appendChild(row);
+});
+
+const protocol = new pmtiles.Protocol();
+maplibregl.addProtocol("pmtiles", protocol.tile);
+
+const map = new maplibregl.Map({
+  container: "map",
+  style: "./pale.json",
+  center: [139.64, 35.86],
+  zoom: 10
+});
+
+map.addControl(new maplibregl.NavigationControl());
+
+let selectedOrigin = null;
+
+function updateFilter() {
+  if (!map.getLayer("reachability-fill") || !selectedOrigin) return;
+  map.setFilter("reachability-fill", ["==", ["get", "origin"], selectedOrigin]);
+}
+
+map.on("load", () => {
+  map.addSource("reachability", {
+    type: "vector",
+    url: "pmtiles://reachability.pmtiles"
+  });
+  map.addLayer({
+    id: "reachability-fill",
+    type: "fill",
+    source: "reachability",
+    "source-layer": "reachability",
+    filter: ["==", ["get", "origin"], ""],
+    paint: {
+      "fill-color": rankColorExpr,
+      "fill-opacity": 0.75,
+      "fill-outline-color": "transparent"
+    }
+  });
+
+  fetch("origins.geojson")
+    .then(r => r.json())
+    .then(fc => {
+      const origins = fc.features.map(f => f.properties.name);
+      const sel = document.getElementById("origin-select");
+      sel.innerHTML = "";
+      origins.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      selectedOrigin = origins[0];
+      updateFilter();
+
+      map.addSource("origins", { type: "geojson", data: fc });
+      map.addLayer({
+        id: "origins-circle",
+        type: "circle",
+        source: "origins",
+        paint: {
+          "circle-radius": 7,
+          "circle-color": "white",
+          "circle-stroke-color": "#333",
+          "circle-stroke-width": 2
+        }
+      });
+      map.addLayer({
+        id: "origins-label",
+        type: "symbol",
+        source: "origins",
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+          "text-size": 12,
+          "text-offset": [0, 1.2],
+          "text-anchor": "top"
+        },
+        paint: {
+          "text-color": "#000",
+          "text-halo-color": "#fff",
+          "text-halo-width": 1.5
+        }
+      });
+    });
+});
+
+document.getElementById("origin-select").addEventListener("change", e => {
+  selectedOrigin = e.target.value;
+  updateFilter();
+});
+</script>
+</body>
+</html>

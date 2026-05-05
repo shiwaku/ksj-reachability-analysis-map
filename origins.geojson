@@ -1,0 +1,62 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.4858,
+          35.9249
+        ]
+      },
+      "properties": {
+        "type": "origin",
+        "name": "川越市役所",
+        "lat": 35.9249,
+        "lon": 139.4858,
+        "snap_lat": 35.92476275,
+        "snap_lon": 139.486077833,
+        "snap_m": 34
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.4006,
+          36.042
+        ]
+      },
+      "properties": {
+        "type": "origin",
+        "name": "東松山市役所",
+        "lat": 36.042,
+        "lon": 139.4006,
+        "snap_lat": 36.042019992,
+        "snap_lon": 139.400404583,
+        "snap_m": 22
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.6239,
+          35.9063
+        ]
+      },
+      "properties": {
+        "type": "origin",
+        "name": "大宮駅",
+        "lat": 35.9063,
+        "lon": 139.6239,
+        "snap_lat": 35.906591979,
+        "snap_lon": 139.625,
+        "snap_m": 126
+      }
+    }
+  ]
+}
