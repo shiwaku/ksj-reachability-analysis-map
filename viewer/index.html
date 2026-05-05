@@ -80,18 +80,7 @@ maplibregl.addProtocol("pmtiles", protocol.tile);
 
 const map = new maplibregl.Map({
   container: "map",
-  style: {
-    version: 8,
-    sources: {
-      gsi: {
-        type: "raster",
-        tiles: ["https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution: '© <a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a>'
-      }
-    },
-    layers: [{ id: "gsi-bg", type: "raster", source: "gsi" }]
-  },
+  style: "./pale.json",
   center: [139.64, 35.86],
   zoom: 10
 });

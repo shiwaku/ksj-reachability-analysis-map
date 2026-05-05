@@ -21,7 +21,7 @@ jobs:
           cache: pip
 
       - name: Install Python dependencies
-        run: pip install geopandas pyarrow scipy
+        run: pip install -r requirements.txt
 
       - name: Run reachability analysis
         run: python3 src/reachability_search.py --orig-csv input/origins.csv
@@ -47,6 +47,7 @@ jobs:
       - name: Copy viewer and origins
         run: |
           cp viewer/index.html docs/index.html
+          cp viewer/pale.json docs/pale.json
           cp output/geojson/origins.geojson docs/origins.geojson
 
       - name: Deploy to GitHub Pages
